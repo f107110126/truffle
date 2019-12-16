@@ -9,6 +9,11 @@ const config = Config.detect({
   workingDirectory: process.argv[2] || process.cwd()
 });
 
+if (!config.db.enabled) {
+  console.log("Experimental truffle-db feature is disabled.");
+  process.exit(0);
+}
+
 const db = new TruffleDB(config);
 
 const { schema, context } = db;
