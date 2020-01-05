@@ -15,23 +15,27 @@ interface SourcesAddResponse {
 }
 
 const contractSourceInput = ({
-  sourcePath,
-  source: contents
-}: CompiledContract): DataModel.ISourceInput => ({
+  contract: { sourcePath, source: contents }
+}: {
+  contract: CompiledContract;
+}): DataModel.ISourceInput => ({
   contents,
   sourcePath
 });
 
 const compilationSourceInputs = ({
-  contracts
-}: Compilation): DataModel.ISourceInput[] => contracts.map(contractSourceInput);
+  compilation: { contracts }
+}: {
+  compilation: Compilation;
+}): DataModel.ISourceInput[] =>
+  contracts.map(contract => contractSourceInput({ contract }));
 
 // returns list of IDs
 export function* generateSourcesLoad(
   compilation: Compilation
 ): Generator<Request, IdObject[], SourcesAddResponse> {
   // for each compilation, we need to load sources for each of the contracts
-  const sources = compilationSourceInputs(compilation);
+  const sources = compilationSourceInputs({ compilation });
 
   const result = yield {
     mutation: AddSources,

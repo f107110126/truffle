@@ -3,28 +3,36 @@ import { Compilation, IdObject, Request } from "../types";
 import { AddCompilation } from "../queries";
 
 const compilationCompilerInput = ({
-  contracts
-}: Compilation): DataModel.ICompilerInput => ({
+  compilation: { contracts }
+}: {
+  compilation: Compilation;
+}): DataModel.ICompilerInput => ({
   name: contracts[0].compiler.name,
   version: contracts[0].compiler.version
 });
 
-const compilationSourceContractInputs = (
-  { contracts }: Compilation,
-  sourceIds: IdObject[]
-): DataModel.ICompilationSourceContractInput[] =>
+const compilationSourceContractInputs = ({
+  compilation: { contracts },
+  sources
+}: {
+  compilation: Compilation;
+  sources: IdObject[];
+}): DataModel.ICompilationSourceContractInput[] =>
   contracts.map(({ contractName: name, ast }, index) => ({
     name,
-    source: sourceIds[index],
+    source: sources[index],
     ast: ast ? { json: JSON.stringify(ast) } : undefined
   }));
 
-const compilationInput = (
-  compilation: Compilation,
-  sources: IdObject[]
-): DataModel.ICompilationInput => {
-  const compiler = compilationCompilerInput(compilation);
-  const contracts = compilationSourceContractInputs(compilation, sources);
+const compilationInput = ({
+  compilation,
+  sources
+}: {
+  compilation: Compilation;
+  sources: IdObject[];
+}): DataModel.ICompilationInput => {
+  const compiler = compilationCompilerInput({ compilation });
+  const contracts = compilationSourceContractInputs({ compilation, sources });
 
   if (compiler.name === "solc") {
     return {
@@ -63,9 +71,7 @@ interface CompilationsAddResponse {
 export function* generateCompilationsLoad(
   loadableCompilations: LoadableCompilation[]
 ): Generator<Request, LoadedCompilation[], CompilationsAddResponse> {
-  const compilations = loadableCompilations.map(({ compilation, sources }) =>
-    compilationInput(compilation, sources)
-  );
+  const compilations = loadableCompilations.map(compilationInput);
 
   const result = yield {
     mutation: AddCompilation,
