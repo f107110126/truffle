@@ -3,6 +3,7 @@ import { WorkflowCompileResult, Request, Response } from "./types";
 
 import { generateBytecodesLoad } from "./bytecodes";
 import { generateCompilationsLoad } from "./compilations";
+import { generateContractsLoad } from "./contracts";
 import { generateSourcesLoad } from "./sources";
 
 /**
@@ -44,7 +45,27 @@ function* generateLoad(
   }
   const compilations = yield* generateCompilationsLoad(loadableCompilations);
 
-  return { compilations };
+  // now time to add contracts and track them by compilation
+  //
+  // again going one compilation at a time (for impl. convenience; HACK)
+  // (@cds-amal reminds that "premature optimization is the root of all evil")
+  const compilationContracts = {};
+  for (const [
+    compilationIndex,
+    { id: compilationId }
+  ] of compilations.entries()) {
+    const compiledContracts =
+      compilationsWithContracts[compilationIndex].contracts;
+    const contractBytecodes = compilationContractBytecodes[compilationIndex];
+
+    compilationContracts[compilationId] = yield* generateContractsLoad(
+      compiledContracts,
+      contractBytecodes,
+      { id: compilationId }
+    );
+  }
+
+  return { compilations, compilationContracts };
 }
 
 export async function load(db: TruffleDB, result: WorkflowCompileResult) {
