@@ -1,5 +1,5 @@
 import { TruffleDB } from "truffle-db/db";
-import { Compilations, Request, Response } from "./types";
+import { WorkflowCompileResult, Request, Response } from "./types";
 
 import { generateCompilationsLoad } from "./compilations";
 import { generateSourcesLoad } from "./sources";
@@ -13,9 +13,9 @@ import { generateSourcesLoad } from "./sources";
  * and ultimately returns nothing when complete.
  */
 function* generateLoad(
-  compilations: Compilations
+  result: WorkflowCompileResult
 ): Generator<Request, any, Response> {
-  const compilationsWithContracts = Object.values(compilations).filter(
+  const compilationsWithContracts = Object.values(result.compilations).filter(
     ({ contracts }) => contracts.length > 0
   );
 
@@ -29,11 +29,12 @@ function* generateLoad(
   }
 
   // then add compilations
-  return yield* generateCompilationsLoad(loadableCompilations);
+  const compilations = yield* generateCompilationsLoad(loadableCompilations);
+  return { compilations };
 }
 
-export async function load(db: TruffleDB, compilations: Compilations) {
-  const saga = generateLoad(compilations);
+export async function load(db: TruffleDB, result: WorkflowCompileResult) {
+  const saga = generateLoad(result);
 
   let cur = saga.next();
   while (!cur.done) {
