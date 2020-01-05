@@ -1,14 +1,13 @@
-import {
-  Compilation,
-  Compilations,
-  IdObject,
-  Request,
-  Response
-} from "../types";
-
-import { generateSourcesLoad } from "../sources";
+import { Compilation, IdObject, Request } from "../types";
 
 import { AddCompilation } from "../queries";
+
+const compilationCompilerInput = ({
+  contracts
+}: Compilation): DataModel.ICompilerInput => ({
+  name: contracts[0].compiler.name,
+  version: contracts[0].compiler.version
+});
 
 const compilationSourceContractInputs = (
   { contracts }: Compilation,
@@ -20,19 +19,12 @@ const compilationSourceContractInputs = (
     ast: ast ? { json: JSON.stringify(ast) } : undefined
   }));
 
-const compilationCompilerInput = ({
-  contracts
-}: Compilation): DataModel.ICompilerInput => ({
-  name: contracts[0].compiler.name,
-  version: contracts[0].compiler.version
-});
-
 const compilationInput = (
   compilation: Compilation,
-  sources: IdObject[],
-  contracts: DataModel.ICompilationSourceContractInput[]
+  sources: IdObject[]
 ): DataModel.ICompilationInput => {
   const compiler = compilationCompilerInput(compilation);
+  const contracts = compilationSourceContractInputs(compilation, sources);
 
   if (compiler.name === "solc") {
     return {
@@ -50,6 +42,16 @@ const compilationInput = (
   }
 };
 
+interface LoadableCompilation {
+  compilation: Compilation;
+  sources: IdObject[];
+}
+
+interface LoadedCompilation {
+  id: string;
+  compiler: DataModel.ICompiler;
+}
+
 interface CompilationsAddResponse {
   data: {
     workspace: {
@@ -58,34 +60,16 @@ interface CompilationsAddResponse {
   };
 }
 
-interface LoadedCompilation {
-  id: string;
-  compiler: DataModel.ICompiler;
-}
-
 export function* generateCompilationsLoad(
-  compilations: Compilations
-): Generator<Request, LoadedCompilation[], Response> {
-  const compilationsWithContracts = Object.values(compilations).filter(
-    ({ contracts }) => contracts.length > 0
+  loadableCompilations: LoadableCompilation[]
+): Generator<Request, LoadedCompilation[], CompilationsAddResponse> {
+  const compilations = loadableCompilations.map(({ compilation, sources }) =>
+    compilationInput(compilation, sources)
   );
 
-  let compilationsInput = [];
-  for (let compilation of compilationsWithContracts) {
-    const sourceIds = yield* generateSourcesLoad(compilation);
-    const sourceContractInputs = compilationSourceContractInputs(
-      compilation,
-      sourceIds
-    );
-
-    compilationsInput.push(
-      compilationInput(compilation, sourceIds, sourceContractInputs)
-    );
-  }
-
-  const result: CompilationsAddResponse = yield {
+  const result = yield {
     mutation: AddCompilation,
-    variables: { compilations: compilationsInput }
+    variables: { compilations }
   };
 
   // return only array of objects { id }

@@ -1,10 +1,4 @@
-import {
-  CompiledContract,
-  Compilation,
-  IdObject,
-  Request,
-  Response
-} from "../types";
+import { CompiledContract, Compilation, IdObject, Request } from "../types";
 
 import { AddSources } from "../queries";
 
@@ -35,11 +29,11 @@ const compilationSourceInputs = ({
 // returns list of IDs
 export function* generateSourcesLoad(
   compilation: Compilation
-): Generator<Request, IdObject[], Response> {
+): Generator<Request, IdObject[], SourcesAddResponse> {
   // for each compilation, we need to load sources for each of the contracts
   const sources = compilationSourceInputs(compilation);
 
-  const result: SourcesAddResponse = yield {
+  const result = yield {
     mutation: AddSources,
     variables: { sources }
   };

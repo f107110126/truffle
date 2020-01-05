@@ -2,6 +2,7 @@ import { TruffleDB } from "truffle-db/db";
 import { Compilations, Request, Response } from "./types";
 
 import { generateCompilationsLoad } from "./compilations";
+import { generateSourcesLoad } from "./sources";
 
 /**
  * For a compilation result from @truffle/workflow-compile/new, generate a
@@ -14,7 +15,21 @@ import { generateCompilationsLoad } from "./compilations";
 function* generateLoad(
   compilations: Compilations
 ): Generator<Request, any, Response> {
-  return yield* generateCompilationsLoad(compilations);
+  const compilationsWithContracts = Object.values(compilations).filter(
+    ({ contracts }) => contracts.length > 0
+  );
+
+  let loadableCompilations = [];
+  for (let compilation of compilationsWithContracts) {
+    // add sources for each compilation
+    const sources = yield* generateSourcesLoad(compilation);
+
+    // record compilation with its sources
+    loadableCompilations.push({ compilation, sources });
+  }
+
+  // then add compilations
+  return yield* generateCompilationsLoad(loadableCompilations);
 }
 
 export async function load(db: TruffleDB, compilations: Compilations) {
