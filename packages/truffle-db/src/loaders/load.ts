@@ -1,6 +1,7 @@
 import { TruffleDB } from "truffle-db/db";
 import { WorkflowCompileResult, Request, Response } from "./types";
 
+import { generateBytecodesLoad } from "./bytecodes";
 import { generateCompilationsLoad } from "./compilations";
 import { generateSourcesLoad } from "./sources";
 
@@ -19,17 +20,30 @@ function* generateLoad(
     ({ contracts }) => contracts.length > 0
   );
 
-  let loadableCompilations = [];
-  for (let compilation of compilationsWithContracts) {
+  // for each compilation returned by workflow-compile:
+  // - add sources
+  // - add bytecodes
+  // then, add the compilations in a single mutation
+  //
+  // track each compilation's bytecodes by contract
+  // NOTE: this relies on array indices
+  const loadableCompilations = [];
+  const compilationContractBytecodes = [];
+  for (const compilation of compilationsWithContracts) {
     // add sources for each compilation
     const sources = yield* generateSourcesLoad(compilation);
 
-    // record compilation with its sources
+    // add bytecodes
+    const contractBytecodes = yield* generateBytecodesLoad(
+      compilation.contracts
+    );
+    compilationContractBytecodes.push(contractBytecodes);
+
+    // record compilation with its sources (bytecodes are related later)
     loadableCompilations.push({ compilation, sources });
   }
-
-  // then add compilations
   const compilations = yield* generateCompilationsLoad(loadableCompilations);
+
   return { compilations };
 }
 
