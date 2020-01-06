@@ -1,4 +1,5 @@
 import { transformSchema, FilterRootFields } from "@gnd/graphql-tools";
+import { GraphQLSchema } from "graphql";
 
 import { scopeSchemas } from "./utils";
 
@@ -6,27 +7,36 @@ import { abiSchema, schema as artifactsSchema } from "truffle-db/artifacts";
 import { schema as workspaceSchema } from "truffle-db/workspace";
 import { loaderSchema } from "truffle-db/loaders";
 
-
 import { readInstructions } from "./bytecode";
 
+interface Subschemas {
+  [subschema: string]: GraphQLSchema;
+}
+
+const subschemas: Subschemas = {
+  artifacts: artifactsSchema,
+  workspace: workspaceSchema
+};
+
+try {
+  // since @truffle/workflow-compile is an optional dependency,
+  // only hook up the loaders schema if we have it
+  require("@truffle/workflow-compile/package.json");
+
+  subschemas.loaders = loaderSchema;
+} catch (_) {}
+
 export const schema = scopeSchemas({
-  subschemas: {
-    artifacts: artifactsSchema,
-    workspace: workspaceSchema,
-    loaders: loaderSchema
-  },
+  subschemas,
   typeDefs: [
     // add types from abi schema
-    transformSchema(abiSchema, [
-      new FilterRootFields( () => false )
-    ])
+    transformSchema(abiSchema, [new FilterRootFields(() => false)])
   ],
   resolvers: {
     Bytecode: {
       instructions: {
         fragment: "... on Bytecode { bytes sourceMap }",
-        resolve: ({ bytes, sourceMap }) =>
-          readInstructions(bytes, sourceMap)
+        resolve: ({ bytes, sourceMap }) => readInstructions(bytes, sourceMap)
       }
     },
 
@@ -48,11 +58,10 @@ export const schema = scopeSchemas({
 
     NormalFunction: {
       type: {
-        resolve (value) {
+        resolve(value) {
           return "function";
         }
       }
     }
-
   }
 });
