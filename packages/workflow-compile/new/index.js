@@ -9,6 +9,15 @@ const {
   reportCompilationFinished
 } = require("../reports");
 
+let TruffleDB;
+let load;
+try {
+  TruffleDB = require("truffle-db").TruffleDB;
+  load = require("truffle-db/loaders/commands/compile").load;
+} catch (_) {
+  // leave TruffleDB undefined, we just can't use it
+}
+
 const SUPPORTED_COMPILERS = {
   solc: {
     compiler: require("@truffle/compile-solidity/new")
@@ -85,13 +94,26 @@ const Contracts = {
     };
   },
 
-  async save(options, contracts) {
+  async save(options, contracts, compilations = null) {
+    // saves contracts and/or compilations using the Artifactor, and
+    // optionally saving to Truffle DB also
     const config = prepareConfig(options);
 
+    // save with artifactor
     await fse.ensureDir(config.contracts_build_directory);
-
     const artifacts = byContractName(contracts.map(shimContract));
     await config.artifactor.saveAll(artifacts);
+
+    // optionally save to Truffle DB
+    if (TruffleDB && config.db && config.db.enabled && compilations) {
+      await Contracts.saveToDB(config, { contracts, compilations });
+    }
+  },
+
+  async saveToDB(config, result) {
+    const db = new TruffleDB(config);
+
+    await load(db, result);
   }
 };
 
