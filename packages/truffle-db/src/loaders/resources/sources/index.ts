@@ -1,6 +1,12 @@
-import { CompiledContract, Compilation, IdObject, Request } from "../types";
+import {
+  CompiledContract,
+  Compilation,
+  IdObject,
+  Request
+} from "truffle-db/loaders/types";
 
-import { AddSources } from "../queries";
+import { AddSources } from "./add.graphql";
+export { AddSources };
 
 interface SourcesAddResponse {
   data: {

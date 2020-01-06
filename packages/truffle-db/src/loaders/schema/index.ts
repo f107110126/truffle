@@ -1,10 +1,10 @@
-import { TruffleDB } from "truffle-db";
-import { ArtifactsLoader } from "./artifacts";
-import { schema as rootSchema } from "truffle-db/schema";
-import { Workspace, schema } from "truffle-db/workspace";
+import gql from "graphql-tag";
 const tmp = require("tmp");
 import { makeExecutableSchema } from "@gnd/graphql-tools";
-import { gql } from "apollo-server";
+
+import { Workspace } from "truffle-db/workspace";
+import { ArtifactsLoader } from "./artifactsLoader";
+export { ArtifactsLoader };
 
 //dummy query here because of known issue with Apollo mutation-only schemas
 const typeDefs = gql`

@@ -1,10 +1,14 @@
 import { TruffleDB } from "truffle-db/db";
-import { WorkflowCompileResult, Request, Response } from "./types";
+import {
+  WorkflowCompileResult,
+  Request,
+  Response
+} from "truffle-db/loaders/types";
 
-import { generateBytecodesLoad } from "./bytecodes";
-import { generateCompilationsLoad } from "./compilations";
-import { generateContractsLoad } from "./contracts";
-import { generateSourcesLoad } from "./sources";
+import { generateBytecodesLoad } from "truffle-db/loaders/resources/bytecodes";
+import { generateCompilationsLoad } from "truffle-db/loaders/resources/compilations";
+import { generateContractsLoad } from "truffle-db/loaders/resources/contracts";
+import { generateSourcesLoad } from "truffle-db/loaders/resources/sources";
 
 /**
  * For a compilation result from @truffle/workflow-compile/new, generate a

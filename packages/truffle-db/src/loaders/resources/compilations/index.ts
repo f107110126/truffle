@@ -1,6 +1,7 @@
-import { Compilation, IdObject, Request } from "../types";
+import { Compilation, IdObject, Request } from "truffle-db/loaders/types";
 
-import { AddCompilation } from "../queries";
+import { AddCompilations } from "./add.graphql";
+export { AddCompilations };
 
 const compilationCompilerInput = ({
   compilation: { contracts }
@@ -74,7 +75,7 @@ export function* generateCompilationsLoad(
   const compilations = loadableCompilations.map(compilationInput);
 
   const result = yield {
-    mutation: AddCompilation,
+    mutation: AddCompilations,
     variables: { compilations }
   };
 

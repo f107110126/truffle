@@ -4,9 +4,10 @@ import {
   IdObject,
   LoadedContract,
   Request
-} from "../types";
+} from "truffle-db/loaders/types";
 
-import { AddContracts } from "../queries";
+import { AddContracts } from "./add.graphql";
+export { AddContracts };
 
 interface ContractsAddResponse {
   data: {

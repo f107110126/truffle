@@ -1,26 +1,31 @@
-import { CompiledContract, ContractBytecodes, Request } from "../types";
+import {
+  CompiledContract,
+  ContractBytecodes,
+  Request
+} from "truffle-db/loaders/types";
 
-import { AddBytecodes } from "../queries";
+import { AddBytecodes } from "./add.graphql";
+export { AddBytecodes };
 
 interface BytecodesAddResponse {
   data: {
     workspace: {
-      bytecodesAdd: DataModel.IBytecodesAddPayload
-    }
-  }
+      bytecodesAdd: DataModel.IBytecodesAddPayload;
+    };
+  };
 }
 
 /**
  * @dev pre-condition: every contract should have both bytecodes
  */
-export function* generateBytecodesLoad(contracts: CompiledContract[]):
-  Generator<Request, ContractBytecodes[], BytecodesAddResponse>
-{
+export function* generateBytecodesLoad(
+  contracts: CompiledContract[]
+): Generator<Request, ContractBytecodes[], BytecodesAddResponse> {
   const { createBytecodes, callBytecodes } = contracts.reduce(
-    ({ createBytecodes, callBytecodes }, {
-      deployedBytecode: callBytecode,
-      bytecode: createBytecode
-    }) => ({
+    (
+      { createBytecodes, callBytecodes },
+      { deployedBytecode: callBytecode, bytecode: createBytecode }
+    ) => ({
       createBytecodes: [...createBytecodes, createBytecode],
       callBytecodes: [...callBytecodes, callBytecode]
     }),

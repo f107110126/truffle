@@ -1,31 +1,18 @@
-import gql from "graphql-tag";
-import { TruffleDB } from "truffle-db/db";
-import * as Contracts from "@truffle/workflow-compile/new";
-import { ContractObject } from "@truffle/contract-schema/spec";
-import * as fse from "fs-extra";
 import path from "path";
-import Config from "@truffle/config";
-import { Environment } from "@truffle/environment";
+
+import * as fse from "fs-extra";
 import Web3 from "web3";
 
-import {
-  AddBytecodes,
-  AddContracts,
-  AddContractInstances,
-  AddNetworks
-} from "../queries";
-import { LoadedContract } from "../types";
-import { load } from "../load";
+import * as Contracts from "@truffle/workflow-compile/new";
+import Config from "@truffle/config";
+import { ContractObject } from "@truffle/contract-schema/spec";
+import { Environment } from "@truffle/environment";
 
-type WorkflowCompileResult = {
-  compilations: {
-    [compilerName: string]: {
-      sourceIndexes: Array<string>;
-      contracts: Array<ContractObject>;
-    };
-  };
-  contracts: { [contractName: string]: ContractObject };
-};
+import { TruffleDB } from "truffle-db/db";
+import { AddContractInstances } from "truffle-db/loaders/resources/contractInstances";
+import { AddNetworks } from "truffle-db/loaders/resources/networks";
+import { LoadedContract } from "truffle-db/loaders/types";
+import { load } from "truffle-db/loaders/commands/compile";
 
 type networkLinkObject = {
   [name: string]: string;
@@ -59,15 +46,6 @@ type BytecodeInfo = {
   id: string;
   linkReferences: Array<LinkReferenceObject>;
   bytes?: string;
-};
-
-type BytecodesObject = {
-  bytecodes: Array<BytecodeInfo>;
-  callBytecodes: Array<BytecodeInfo>;
-};
-
-type IdObject = {
-  id: string;
 };
 
 type CompilationConfigObject = {
@@ -250,7 +228,9 @@ export class ArtifactsLoader {
     });
 
     const result = await this.db.query(AddContractInstances, {
-      contractInstances: instances.flat()
+      // HACK this was `instances.flat()` but then that stopped working
+      // hence the inlining
+      contractInstances: instances.reduce((acc, cur) => [...acc, ...cur], [])
     });
   }
 }
