@@ -12,7 +12,6 @@ import { TruffleDB } from "truffle-db/db";
 import { AddContractInstances } from "truffle-db/loaders/resources/contractInstances";
 import { AddNetworks } from "truffle-db/loaders/resources/networks";
 import { LoadedContract } from "truffle-db/loaders/types";
-import { load } from "truffle-db/loaders/commands/compile";
 
 type networkLinkObject = {
   [name: string]: string;
@@ -68,7 +67,10 @@ export class ArtifactsLoader {
   async load(): Promise<void> {
     const result = await Contracts.compile(this.config);
 
-    const { compilations, compilationContracts } = await load(this.db, result);
+    const {
+      compilations,
+      compilationContracts
+    } = await this.db.loadCompilations(result);
 
     //map contracts and contract instances to compiler
     await Promise.all(

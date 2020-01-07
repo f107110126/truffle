@@ -10,10 +10,8 @@ const {
 } = require("../reports");
 
 let TruffleDB;
-let load;
 try {
   TruffleDB = require("truffle-db").TruffleDB;
-  load = require("truffle-db/loaders/commands/compile").load;
 } catch (_) {
   // leave TruffleDB undefined, we just can't use it
 }
@@ -113,7 +111,7 @@ const Contracts = {
   async saveToDB(config, result) {
     const db = new TruffleDB(config);
 
-    await load(db, result);
+    await db.loadCompilations(result);
   }
 };
 
